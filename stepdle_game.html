@@ -1,0 +1,461 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: transparent; }
+#app {
+  font-family: var(--font-sans, Arial, sans-serif);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 8px 24px;
+  min-height: 600px;
+  color: var(--color-text-primary);
+}
+.header {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.title { font-size: 26px; font-weight: 500; letter-spacing: 6px; }
+.subtitle { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+
+.answer-section { text-align: center; margin-bottom: 16px; }
+.answer-label { font-size: 11px; color: var(--color-text-tertiary); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.answer-tiles { display: flex; gap: 4px; justify-content: center; }
+.answer-tile {
+  width: 42px; height: 42px;
+  background: #538d4e;
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 500;
+  border-radius: 4px;
+}
+.meta { font-size: 12px; color: var(--color-text-tertiary); margin-top: 6px; }
+
+.toast {
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+.toast-inner {
+  background: var(--color-text-primary);
+  color: var(--color-background-primary);
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.grid { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+.row { display: flex; align-items: center; gap: 8px; }
+.row-num {
+  width: 20px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  text-align: right;
+  font-weight: 500;
+}
+.row-num.current { color: var(--color-text-primary); }
+.row-num.solved { color: #538d4e; }
+.tiles { display: flex; gap: 5px; }
+.tile {
+  width: 50px; height: 50px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 500;
+  border-radius: 4px;
+  border: 1.5px solid var(--color-border-tertiary);
+  transition: transform 0.1s;
+  color: #fff;
+  background: var(--color-background-secondary);
+}
+.tile.correct { background: #538d4e; border-color: #538d4e; }
+.tile.present { background: #b59f3b; border-color: #b59f3b; }
+.tile.absent { background: #3a3a3c; border-color: #3a3a3c; }
+.tile.current-typing {
+  border-color: var(--color-border-primary);
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+}
+.tile.hint { border-style: dashed; }
+.tile.future { opacity: 0.45; }
+.shake { animation: shake 0.45s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(7px); }
+  60% { transform: translateX(-7px); }
+  80% { transform: translateX(7px); }
+}
+@keyframes flipIn {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+.flipping { animation: flipIn 0.4s ease; }
+
+.keyboard { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.kb-row { display: flex; gap: 5px; }
+.key {
+  height: 46px;
+  min-width: 34px;
+  padding: 0 8px;
+  background: #818384;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none;
+  transition: background 0.1s, transform 0.08s;
+}
+.key.wide { min-width: 58px; font-size: 12px; }
+.key:active { transform: scale(0.95); }
+.key.key-correct { background: #538d4e; }
+.key.key-present { background: #b59f3b; }
+.key.key-absent { background: #3a3a3c; }
+
+.win-screen {
+  text-align: center;
+  margin-top: 16px;
+  padding: 20px;
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  background: var(--color-background-primary);
+  width: 100%;
+  max-width: 340px;
+}
+.win-icon { font-size: 40px; margin-bottom: 8px; }
+.win-title { font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+.win-sub { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 16px; }
+.next-btn {
+  background: #538d4e;
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--border-radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+.next-btn:hover { background: #447040; }
+
+.puzzle-nav {
+  display: flex; gap: 6px; margin-bottom: 12px; justify-content: center;
+}
+.puz-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-tertiary);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.puz-dot.active { background: #538d4e; }
+.puz-dot.done { background: #538d4e; opacity: 0.5; }
+
+.attempts-bar {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 8px;
+}
+
+.hint-btn {
+  background: transparent;
+  border: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-secondary);
+  padding: 5px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
+.hint-btn:hover { background: var(--color-background-secondary); }
+</style>
+
+<h2 class="sr-only">Stepdle — guess the words used to solve each Wordle puzzle</h2>
+<div id="app"></div>
+
+<script>
+(function() {
+
+function getColors(guess, answer) {
+  const colors = Array(5).fill('absent');
+  const aArr = answer.split('');
+  const gArr = guess.split('');
+  const aUsed = Array(5).fill(false);
+  const gUsed = Array(5).fill(false);
+  for (let i = 0; i < 5; i++) {
+    if (gArr[i] === aArr[i]) {
+      colors[i] = 'correct'; aUsed[i] = true; gUsed[i] = true;
+    }
+  }
+  for (let i = 0; i < 5; i++) {
+    if (gUsed[i]) continue;
+    for (let j = 0; j < 5; j++) {
+      if (!aUsed[j] && gArr[i] === aArr[j]) {
+        colors[i] = 'present'; aUsed[j] = true; break;
+      }
+    }
+  }
+  return colors;
+}
+
+const PUZZLES = [
+  { answer: 'FLAME', guesses: ['CRANE', 'BLAME', 'FLAME'] },
+  { answer: 'BRAVE', guesses: ['STARE', 'CRAVE', 'BRAVE'] },
+  { answer: 'PLANT', guesses: ['CRANE', 'PLAIN', 'PLANT'] },
+  { answer: 'STORM', guesses: ['CRANE', 'THORN', 'STORM'] },
+  { answer: 'CHAIR', guesses: ['STARE', 'MARCH', 'CHAIN', 'CHAIR'] },
+  { answer: 'WORLD', guesses: ['CRANE', 'GROUT', 'DROLL', 'WORLD'] },
+];
+
+let state = {
+  pIdx: 0,
+  step: 0,
+  input: '',
+  solvedSteps: [],
+  won: false,
+  wrongAttempts: 0,
+  hintCount: 0,
+  shaking: false,
+  toastMsg: '',
+  toastTimer: null,
+  keyStates: {},
+  completedPuzzles: [],
+};
+
+function puzzle() { return PUZZLES[state.pIdx]; }
+
+function allColors() {
+  const p = puzzle();
+  return p.guesses.map(g => getColors(g, p.answer));
+}
+
+function showToast(msg, dur=2000) {
+  if (state.toastTimer) clearTimeout(state.toastTimer);
+  state.toastMsg = msg;
+  render();
+  state.toastTimer = setTimeout(() => { state.toastMsg = ''; render(); }, dur);
+}
+
+function resetPuzzle(idx) {
+  state = {
+    pIdx: idx,
+    step: 0,
+    input: '',
+    solvedSteps: [],
+    won: false,
+    wrongAttempts: 0,
+    hintCount: 0,
+    shaking: false,
+    toastMsg: '',
+    toastTimer: null,
+    keyStates: {},
+    completedPuzzles: state.completedPuzzles,
+  };
+  render();
+}
+
+function updateKeyStates(step) {
+  const p = puzzle();
+  const c = allColors();
+  for (let s = 0; s <= step; s++) {
+    if (!state.solvedSteps.includes(s)) continue;
+    const colors = c[s];
+    const guess = p.guesses[s];
+    for (let i = 0; i < 5; i++) {
+      const k = guess[i];
+      const existing = state.keyStates[k];
+      const priority = { correct: 3, present: 2, absent: 1 };
+      if (!existing || priority[colors[i]] > priority[existing]) {
+        state.keyStates[k] = colors[i];
+      }
+    }
+  }
+}
+
+function handleGuess() {
+  if (state.won) return;
+  const g = state.input.toUpperCase().replace(/[^A-Z]/g,'').slice(0,5);
+  if (g.length !== 5) { showToast('Enter a 5-letter word'); return; }
+  const target = puzzle().guesses[state.step];
+  if (g === target) {
+    state.solvedSteps = [...state.solvedSteps, state.step];
+    updateKeyStates(state.step);
+    state.input = '';
+    state.wrongAttempts = 0;
+    state.hintCount = 0;
+    if (state.step + 1 >= puzzle().guesses.length) {
+      state.won = true;
+      if (!state.completedPuzzles.includes(state.pIdx)) {
+        state.completedPuzzles.push(state.pIdx);
+      }
+      showToast('Brilliant!', 4000);
+    } else {
+      state.step++;
+      showToast('Correct!', 1500);
+    }
+    render();
+  } else {
+    state.wrongAttempts++;
+    state.input = '';
+    if (state.wrongAttempts % 2 === 0 && state.hintCount < 4) {
+      state.hintCount = Math.min(state.hintCount + 1, 4);
+      showToast(`Hint: First ${state.hintCount} letter${state.hintCount>1?'s':''} revealed`);
+    } else {
+      showToast('Not this one — try again');
+    }
+    state.shaking = true;
+    render();
+    setTimeout(() => { state.shaking = false; render(); }, 500);
+  }
+}
+
+function handleKey(k) {
+  if (state.won) return;
+  if (k === 'ENTER') { handleGuess(); return; }
+  if (k === '⌫') { state.input = state.input.slice(0,-1); render(); return; }
+  if (/^[A-Z]$/.test(k) && state.input.length < 5) {
+    state.input += k;
+    render();
+  }
+}
+
+const KB_ROWS = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L'],
+  ['ENTER','Z','X','C','V','B','N','M','⌫'],
+];
+
+function render() {
+  const p = puzzle();
+  const colors = allColors();
+  const app = document.getElementById('app');
+
+  let rowsHTML = '';
+  for (let s = 0; s < p.guesses.length; s++) {
+    const isSolved = state.solvedSteps.includes(s);
+    const isCurrent = s === state.step && !state.won;
+    const isFuture = s > state.step && !state.won;
+    const rowClass = state.shaking && isCurrent ? 'tiles shake' : 'tiles';
+    const numClass = isSolved ? 'row-num solved' : (isCurrent ? 'row-num current' : 'row-num');
+    const numSymbol = isSolved ? '✓' : (isCurrent ? '▶' : (s+1));
+
+    let tilesHTML = '';
+    for (let i = 0; i < 5; i++) {
+      const color = colors[s][i];
+      let letter = '';
+      let tileClass = 'tile ' + color;
+
+      if (isSolved) {
+        letter = p.guesses[s][i];
+      } else if (isCurrent) {
+        if (i < state.hintCount) {
+          letter = p.guesses[s][i];
+          tileClass = 'tile ' + color + ' hint';
+        } else if (i < state.input.length) {
+          letter = state.input[i];
+          tileClass = 'tile current-typing';
+        } else {
+          tileClass = 'tile ' + color;
+        }
+      } else {
+        tileClass = 'tile ' + color + ' future';
+      }
+
+      tilesHTML += `<div class="${tileClass}">${letter}</div>`;
+    }
+    rowsHTML += `<div class="row">
+      <div class="${numClass}">${numSymbol}</div>
+      <div class="${rowClass}">${tilesHTML}</div>
+    </div>`;
+  }
+
+  let kbHTML = '';
+  for (const row of KB_ROWS) {
+    let keys = '';
+    for (const k of row) {
+      const ks = state.keyStates[k];
+      const cls = 'key' + (k.length > 1 ? ' wide' : '') + (ks ? ' key-' + ks : '');
+      keys += `<button class="${cls}" data-key="${k}">${k}</button>`;
+    }
+    kbHTML += `<div class="kb-row">${keys}</div>`;
+  }
+
+  const dotsHTML = PUZZLES.map((_, i) => {
+    const done = state.completedPuzzles.includes(i);
+    const active = i === state.pIdx;
+    const cls = 'puz-dot' + (active ? ' active' : '') + (done && !active ? ' done' : '');
+    return `<div class="${cls}" data-pidx="${i}" title="Puzzle ${i+1}"></div>`;
+  }).join('');
+
+  const answerTiles = p.answer.split('').map(l => `<div class="answer-tile">${l}</div>`).join('');
+
+  const winBlock = state.won ? `
+    <div class="win-screen">
+      <div class="win-icon"><i class="ti ti-confetti" aria-hidden="true"></i></div>
+      <div class="win-title">Reconstructed!</div>
+      <div class="win-sub">You guessed all ${p.guesses.length} steps correctly</div>
+      ${state.pIdx + 1 < PUZZLES.length
+        ? `<button class="next-btn" id="next-btn">Next puzzle →</button>`
+        : `<button class="next-btn" id="next-btn">Play again ↺</button>`
+      }
+    </div>` : `<div class="keyboard">${kbHTML}</div>`;
+
+  const attemptsTxt = state.won ? '' : (state.wrongAttempts > 0
+    ? `<div class="attempts-bar">${state.wrongAttempts} wrong attempt${state.wrongAttempts !== 1 ? 's' : ''} on this step</div>`
+    : '');
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="title">STEPDLE</div>
+      <div class="subtitle">Guess each word used to solve this Wordle</div>
+    </div>
+    <div class="puzzle-nav">${dotsHTML}</div>
+    <div class="answer-section">
+      <div class="answer-label">The answer was</div>
+      <div class="answer-tiles">${answerTiles}</div>
+      <div class="meta">Puzzle ${state.pIdx + 1} of ${PUZZLES.length} · ${p.guesses.length} steps</div>
+    </div>
+    <div class="toast">${state.toastMsg ? `<div class="toast-inner">${state.toastMsg}</div>` : ''}</div>
+    <div class="grid">${rowsHTML}</div>
+    ${attemptsTxt}
+    ${winBlock}
+  `;
+
+  document.querySelectorAll('.key').forEach(btn => {
+    btn.addEventListener('click', () => handleKey(btn.dataset.key));
+  });
+  document.querySelectorAll('.puz-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const idx = parseInt(dot.dataset.pidx);
+      if (idx !== state.pIdx) resetPuzzle(idx);
+    });
+  });
+  const nextBtn = document.getElementById('next-btn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      const next = state.pIdx + 1 < PUZZLES.length ? state.pIdx + 1 : 0;
+      resetPuzzle(next);
+    });
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Enter') { handleGuess(); return; }
+  if (e.key === 'Backspace') { state.input = state.input.slice(0,-1); render(); return; }
+  const k = e.key.toUpperCase();
+  if (/^[A-Z]$/.test(k) && state.input.length < 5) { state.input += k; render(); }
+});
+
+render();
+})();
+</script>
